@@ -1,0 +1,242 @@
+#include <stdio.h>
+#include <string.h>
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_log.h"
+#include "led_strip.h"
+#include "esp_now.h"
+#include "esp_wifi.h"
+#include "esp_netif.h"
+#include "esp_mac.h"
+#include "esp_event.h"
+#include "nvs_flash.h"
+
+#define N1 7
+#define N2 6
+#define N3 5
+#define N4 4
+
+#define LED_SIMPLE 10
+#define LED_STRIP 8
+#define LED_STRIP_MAX_LEDS 1
+
+#define ESP_NOW_PMK "pmk1234567890123"
+#define ESP_NOW_LMK "lmk1234567890123"
+#define ESP_CHANNEL 1
+
+static uint8_t peer_mac[ESP_NOW_ETH_ALEN] = {0xdc, 0xda, 0x0c, 0x87, 0x7e, 0x14};
+
+static const char *TAG = "2DW-CAR";
+led_strip_handle_t led_strip;
+int led_state = 0;
+
+static esp_err_t esp_now_send_data(const uint8_t *peer_addr, const uint8_t *data, const uint8_t len);
+
+static esp_err_t stop(void)
+{
+    gpio_set_level(N1, 0);
+    gpio_set_level(N2, 0);
+    gpio_set_level(N3, 0);
+    gpio_set_level(N4, 0);
+    led_strip_set_pixel(led_strip, 0, 20, 0, 0);
+    led_strip_refresh(led_strip);
+    ESP_LOGI(TAG, "stop completed");
+    return ESP_OK;
+}
+
+static esp_err_t move_forward(void)
+{
+    gpio_set_level(N1, 0);
+    gpio_set_level(N2, 1);
+    gpio_set_level(N3, 1);
+    gpio_set_level(N4, 0);
+    led_strip_set_pixel(led_strip, 0, 0, 20, 0);
+    led_strip_refresh(led_strip);
+    ESP_LOGI(TAG, "move_forward completed");
+    return ESP_OK;
+}
+static esp_err_t move_back(void)
+{
+    gpio_set_level(N1, 1);
+    gpio_set_level(N2, 0);
+    gpio_set_level(N3, 0);
+    gpio_set_level(N4, 1);
+    led_strip_set_pixel(led_strip, 0, 0, 0, 20);
+    led_strip_refresh(led_strip);
+    ESP_LOGI(TAG, "move_back completed");
+    return ESP_OK;
+}
+
+static esp_err_t turn_right(void)
+{
+    gpio_set_level(N1, 0);
+    gpio_set_level(N2, 1);
+    gpio_set_level(N3, 0);
+    gpio_set_level(N4, 1);
+    led_strip_set_pixel(led_strip, 0, 20, 20, 0);
+    led_strip_refresh(led_strip);
+    ESP_LOGI(TAG, "turn_right completed");
+    return ESP_OK;
+}
+static esp_err_t turn_left(void)
+{
+    gpio_set_level(N1, 1);
+    gpio_set_level(N2, 0);
+    gpio_set_level(N3, 1);
+    gpio_set_level(N4, 0);
+    led_strip_set_pixel(led_strip, 0, 0, 20, 20);
+    led_strip_refresh(led_strip);
+    ESP_LOGI(TAG, "turn_left completed");
+    return ESP_OK;
+}
+
+static void esp_now_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len)
+{
+
+    ESP_LOGI(TAG, "esp_now_recv_cb:" MACSTR ":", MAC2STR(esp_now_info->src_addr));
+
+    uint8_t option;
+    uint8_t g_value;
+    uint8_t b_value;
+
+    option = atoi((char *)data);
+
+    switch (option)
+    {
+    case 0:
+        stop();
+        break;
+    case 1:
+        move_forward();
+        break;
+    case 2:
+        move_back();
+        break;
+    case 3:
+        turn_left();
+        break;
+    case 4:
+        turn_right();
+        break;
+    default:
+        stop();
+        break;
+    }
+}
+
+static void esp_now_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+{
+    if (status == ESP_NOW_SEND_SUCCESS)
+    {
+        ESP_LOGI(TAG, "ESP_NOW_SEND_SUCCESS " MACSTR "", MAC2STR(mac_addr));
+    }
+    else
+    {
+        ESP_LOGI(TAG, "ESP_NOW_SEND fails");
+    }
+}
+static esp_err_t init_wifi(void)
+{
+    wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+    esp_netif_init();
+    esp_event_loop_create_default();
+    esp_wifi_init(&wifi_init_config);
+    esp_wifi_set_storage(WIFI_STORAGE_RAM);
+    esp_wifi_set_mode(WIFI_MODE_STA);
+    esp_wifi_start();
+    ESP_LOGI(TAG, "wifi init completed");
+
+    return ESP_OK;
+}
+
+static esp_err_t init_esp_now(void)
+{
+    esp_now_init();
+    esp_now_register_recv_cb(esp_now_recv_cb);
+    esp_now_register_send_cb(esp_now_send_cb);
+    esp_now_set_pmk((uint8_t *)ESP_NOW_PMK);
+    return ESP_OK;
+}
+
+static esp_err_t register_peer(uint8_t *peer_addr)
+{
+    esp_now_peer_info_t esp_now_peer_info = {};
+    memcpy(esp_now_peer_info.peer_addr, peer_addr, ESP_NOW_ETH_ALEN);
+    esp_now_peer_info.channel = ESP_CHANNEL;
+    esp_now_peer_info.ifidx = ESP_IF_WIFI_STA;
+    memcpy(esp_now_peer_info.lmk, ESP_NOW_LMK, ESP_NOW_KEY_LEN);
+    esp_now_peer_info.encrypt = true;
+
+    esp_now_add_peer(&esp_now_peer_info);
+    return ESP_OK;
+}
+
+static esp_err_t esp_now_send_data(const uint8_t *peer_addr, const uint8_t *data, const uint8_t len)
+{
+    esp_now_send(peer_addr, data, len);
+    return ESP_OK;
+}
+
+static esp_err_t init_led_strip(void)
+{
+    /* LED strip initialization with the GPIO and pixels number*/
+    led_strip_config_t strip_config = {
+        .strip_gpio_num = LED_STRIP,              // The GPIO that connected to the LED strip's data line
+        .max_leds = LED_STRIP_MAX_LEDS,           // The number of LEDs in the strip,
+        .led_pixel_format = LED_PIXEL_FORMAT_GRB, // Pixel format of your LED strip
+        .led_model = LED_MODEL_WS2812,            // LED strip model
+        .flags.invert_out = false,                // whether to invert the output signal (useful when your hardware has a level inverter)
+    };
+
+    led_strip_rmt_config_t rmt_config = {
+        .clk_src = RMT_CLK_SRC_DEFAULT,    // different clock source can lead to different power consumption
+        .resolution_hz = 10 * 1000 * 1000, // 10MHz
+        .flags.with_dma = false,           // whether to enable the DMA feature
+    };
+    ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
+    ESP_LOGI(TAG, "init_led_strip completed");
+    return ESP_OK;
+}
+
+static esp_err_t init_led(void)
+{
+    gpio_reset_pin(N1);
+    gpio_reset_pin(N2);
+    gpio_reset_pin(N3);
+    gpio_reset_pin(N4);
+    gpio_reset_pin(LED_SIMPLE);
+
+    gpio_set_direction(N1, GPIO_MODE_OUTPUT);
+    gpio_set_direction(N2, GPIO_MODE_OUTPUT);
+    gpio_set_direction(N3, GPIO_MODE_OUTPUT);
+    gpio_set_direction(N4, GPIO_MODE_OUTPUT);
+    gpio_set_direction(LED_SIMPLE, GPIO_MODE_OUTPUT);
+    ESP_LOGI(TAG, "init_led completed");
+    return ESP_OK;
+}
+
+static esp_err_t blink_led(int gpio_led)
+{
+    led_state = !led_state;
+    gpio_set_level(gpio_led, led_state);
+    ESP_LOGI(TAG, "blink_led completed");
+    return ESP_OK;
+}
+
+void app_main(void)
+{
+    init_led();
+    init_led_strip();
+    stop();
+    nvs_flash_init();
+    ESP_ERROR_CHECK(init_wifi());
+    ESP_ERROR_CHECK(init_esp_now());
+    ESP_ERROR_CHECK(register_peer(peer_mac));
+
+    while (1)
+    {
+        blink_led(LED_SIMPLE);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}

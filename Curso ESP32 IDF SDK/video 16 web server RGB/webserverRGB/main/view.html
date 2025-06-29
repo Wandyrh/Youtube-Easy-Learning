@@ -1,0 +1,127 @@
+<html>
+
+<head>
+    <title>ESP32 Web Server</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #0F3376;
+            padding: 2vh;
+        }
+
+        p {
+            font-size: 1.5rem;
+        }
+
+        table {
+            margin: auto;
+        }
+
+        td {
+            padding: 10px;
+            font-size: 20px;
+        }
+
+        .Button {
+            
+            display: inline-block;
+            cursor: pointer;
+            color: #ffffff;          
+            font-weight: bold;
+            font-style: italic;
+            padding: 17px 19px;
+            text-decoration: none;
+            font-size: 20px;
+            font-family: Arial;
+            width: 140px;
+            height: 50px;
+            border-width: 1px;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+        }
+
+        .ButtonR {   
+            border-color: #d02718; 
+            box-shadow: 3px 4px 0px 0px #8a2a21;
+            text-shadow: 0px 1px 0px #810e05;
+            background: linear-gradient(#c62d1f, #f24437);
+        }
+
+        .ButtonR:hover {
+            background: linear-gradient(#f24437, #c62d1f);
+        }
+
+        .Button:active {
+            position: relative;
+            top: 1px;
+        }
+
+        .ButtonG {
+            border-color: #3dd018; 
+            box-shadow: 3px 4px 0px 0px #218a21;
+            text-shadow: 0px 1px 0px #058105;
+            background: linear-gradient(#1fc627, #37f237);
+        }
+
+        .ButtonG:hover {
+            background: linear-gradient(#3df237, #3bc61f);
+        }
+
+        .ButtonB {
+            border-color: #1849d0; 
+            box-shadow: 3px 4px 0px 0px #214b8a;
+            text-shadow: 0px 1px 0px #053b81;
+            background: linear-gradient(#1f67c6, #378ef2);
+        }
+
+        .ButtonB:hover {
+            background: linear-gradient(#3788f2, #1f54c6);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ESP32 Web Server</h1>
+    <p>RGB Control IDF SDK</p>
+
+    <table>
+        <tbody>
+            <tr>
+                <td>
+                    <p><a href="/?led-r"><button class="ButtonR Button">R</button></a></p>
+                </td>
+                <td>
+                    <strong> %s </strong>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p><a href="/?led-g"><button class="ButtonG Button">G</button></a></p>
+                </td>
+                <td>
+                    <strong> %s </strong>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p><a href="/?led-b"><button class="ButtonB Button">B</button></a></p>
+                </td>
+                <td>
+                    <strong> %s </strong>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>

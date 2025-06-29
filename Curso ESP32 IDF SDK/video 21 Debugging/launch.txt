@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            // "preLaunchTask": "PreRun",
+            "name": "ESP32 OpenOCD",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/build",
+            "program": "${workspaceFolder}/build/${command:espIdf.getProjectName}.elf",
+            "miDebuggerPath": "path to -gdb.exe",
+            "setupCommands": [
+                {"text": "target remote 127.0.0.1:3333" },
+                {"text": "set remote hardware-watchpoint-limit 2"},
+                {"text": "monitor reset halt"},
+                {"text": "flushregs"}
+            ]
+        }
+
+    ]
+}
