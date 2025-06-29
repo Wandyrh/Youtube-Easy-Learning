@@ -1,0 +1,135 @@
+<html>
+    <head>
+        <title>ESP32 Web Server</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" href="data:,">
+        <style>
+            meter {
+                -webkit-writing-mode: horizontal-tb !important;
+                appearance: auto;
+                box-sizing: border-box;
+                display: inline-block;
+                height: 3em;
+                width: 13em;
+                vertical-align: -1.0em;
+                -webkit-user-modify: read-only !important;
+            }
+    
+            html {
+                font-family: Helvetica;
+                display: inline-block;
+                margin: 0px auto;
+                text-align: center;
+            }
+    
+            h1 {
+                color: #0F3376;
+                padding: 2vh;
+            }
+    
+            p {
+                font-size: 1.5rem;
+            }
+    
+            table {
+                margin: auto;
+            }
+    
+            td {
+                padding: 7px;           
+            }
+    
+            .Button {
+                border-radius: 31px;
+                display: inline-block;
+                cursor: pointer;
+                color: #ffffff;
+                font-family: Arial;
+                font-size: 10px;
+                font-weight: bold;
+                font-style: italic;
+                padding: 4px 5px;
+                text-decoration: none;
+            }
+    
+            .ButtonR {
+                background-color: #9549ec;
+                border: 3px solid #6c1f99;
+                text-shadow: 0px 2px 2px #3b1e47;
+            }
+    
+            .ButtonR:hover {
+                background-color: #c816f5;
+            }
+    
+            .Button:active {
+                position: relative;
+                top: 1px;
+            }
+    
+            .ButtonG {
+                background-color: #49ece4;
+                border: 3px solid #1f8b99;
+                text-shadow: 0px 2px 2px #1e3b47;
+            }
+    
+            .ButtonG:hover {
+                background-color: #16b6f5;
+            }
+    
+            .ButtonB {
+                background-color: #4974ec;
+                border: 3px solid #1f3599;
+                text-shadow: 0px 2px 2px #1e2447;
+            }
+    
+            .ButtonB:hover {
+                background-color: #165df5;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <h1>ESP32 Web Server</h1>
+        <p>Medici&oacute;n de sensores</p>
+    
+    
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        <p><a href="/update"><button class="ButtonR Button">Sensor 1</button></a></p>
+                    </td>
+                    <td>
+                        <strong> """+ r_value +""" %</strong>
+                        <meter id="fuel" min="0" max="100" low="30" high="70" optimum="80" value=" @@"""+ r_value +""" @@">
+                            at 50/100
+                        </meter>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p><a href="/update"><button class="ButtonG Button">Sensor 2</button></a></p>
+                    </td>
+                    <td>
+                        <strong> """+ g_value +""" %</strong>
+                        <meter id="fuel" min="0" max="100" low="30" high="70" optimum="80" value=" @@"""+ g_value +""" @@">
+                            at 50/100
+                        </meter>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p><a href="/update"><button class="ButtonB Button">Sensor 3</button></a></p>
+                    </td>
+                    <td>
+                        <strong> """+ b_value +""" %</strong>
+                        <meter id="fuel" min="0" max="100" low="30" high="70" optimum="80" value=" @@"""+ b_value +""" @@">
+                            at 50/100
+                        </meter>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+    </html>
